@@ -32,6 +32,7 @@ namespace MudBlazor
         private string _valueString;
         private double? _valueNumber;
         private Enum _valueEnum = null;
+        private Enum _valueEnumFlags = null;
         private bool? _valueBool;
         private DateTime? _valueDate;
         private TimeSpan? _valueTime;
@@ -80,6 +81,14 @@ namespace MudBlazor
             }
         }
 
+        private bool isEnumFlags
+        {
+            get
+            {
+                return FilterOperator.IsEnumFlags(dataType);
+            }
+        }
+
         private bool isEnum
         {
             get
@@ -123,6 +132,14 @@ namespace MudBlazor
         internal void EnumValueChanged(Enum value)
         {
             _valueEnum = value;
+            Column.filterContext.FilterDefinition.Operator = _operator;
+            Column.filterContext.FilterDefinition.Value = value;
+            ApplyFilter(Column.filterContext.FilterDefinition);
+        }
+
+        internal void EnumFlagsValueChanged(Enum value)
+        {
+            _valueEnumFlags = value;
             Column.filterContext.FilterDefinition.Operator = _operator;
             Column.filterContext.FilterDefinition.Value = value;
             ApplyFilter(Column.filterContext.FilterDefinition);

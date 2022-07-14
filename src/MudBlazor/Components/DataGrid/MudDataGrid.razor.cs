@@ -1194,6 +1194,24 @@ namespace MudBlazor
             }
         }
 
+        private void FieldChanged(FilterDefinition<T> filterDefinition, string Field)
+        {
+            filterDefinition.Field = Field;
+            filterDefinition.Value = null;
+            filterDefinition.FieldType = typeof(T).GetProperty(Field).PropertyType;
+            filterDefinition.Operator = FilterOperator.GetOperatorByDataType(filterDefinition.FieldType).FirstOrDefault();
+        }
+
+        private void OperatorChanged(FilterDefinition<T> filterDefinition, string Operator)
+        {
+            filterDefinition.Operator = Operator;
+        }
+
+        private void ValueChanged(FilterDefinition<T> filterDefinition, object Value)
+        {
+            filterDefinition.Value = Value;
+        }
+
         #endregion
 
         #region Resize feature

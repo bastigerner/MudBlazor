@@ -220,7 +220,7 @@ namespace MudBlazor
         {
             get
             {
-                return Title ?? Field;
+                return string.IsNullOrEmpty(Title) ? Field : Title;
             }
         }
 

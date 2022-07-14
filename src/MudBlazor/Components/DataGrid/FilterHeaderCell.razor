@@ -20,6 +20,16 @@
                 {
                     <MudNumericField T="double?" Value="@_valueNumber" ValueChanged="@NumberValueChanged" FullWidth="true" Placeholder="Filter value" Margin="@Margin.Dense" Immediate="true"></MudNumericField>
                 }
+                else if (isEnumFlags)
+                {
+                    <MudSelect T="Enum" Value="@_valueEnumFlags" ValueChanged="@EnumFlagsValueChanged" FullWidth="true" Dense="true" Margin="@Margin.Dense">
+                        <MudSelectItem T="Enum" Value="@(null)"></MudSelectItem>
+                        @foreach (var item in Enum.GetValues(dataType))
+                        {
+                            <MudSelectItem T="Enum" Value="@((Enum)item)">@item</MudSelectItem>
+                        }
+                    </MudSelect>
+                }
                 else if (isEnum)
                 {
                     <MudSelect T="Enum" Value="@_valueEnum" ValueChanged="@EnumValueChanged" FullWidth="true" Dense="true" Margin="@Margin.Dense">

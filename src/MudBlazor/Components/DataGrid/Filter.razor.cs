@@ -28,27 +28,13 @@ namespace MudBlazor
         [Parameter] public EventCallback<string> OperatorChanged { get; set; }
         [Parameter] public EventCallback<object> ValueChanged { get; set; }
 
-        private string __operator;
-        private string _operator
-        {
-            get
-            {
-                return __operator;
-            }
-            set
-            {
-                __operator = value;
-                Operator = __operator;
-                OperatorChanged.InvokeAsync(Operator);
-            }
-        }
-        private string _valueString;
-        private double? _valueNumber;
-        private Enum _valueEnum = null;
-        private Enum _valueEnumFlags = null;
-        private bool? _valueBool;
-        private DateTime? _valueDate;
-        private TimeSpan? _valueTime;
+        private string _valueString => Value?.ToString();
+        private double? _valueNumber => Value == null ? null : Convert.ToDouble(Value);
+        private Enum _valueEnum => (Enum)Value;
+        private Enum _valueEnumFlags => (Enum)Value;
+        private bool? _valueBool => Value == null ? null : Convert.ToBoolean(Value);
+        private DateTime? _valueDate => Value == null ? DateTime.Now : Convert.ToDateTime(Value);
+        private TimeSpan? _valueTime => Value == null ? DateTime.Now.TimeOfDay : Convert.ToDateTime(Value).TimeOfDay;
 
         #region Computed Properties and Functions
 
@@ -88,7 +74,7 @@ namespace MudBlazor
             }
         }
 
-        private bool IsEnumFlags
+        private bool isEnumFlags
         {
             get
             {
@@ -100,39 +86,10 @@ namespace MudBlazor
 
         protected override void OnInitialized()
         {
-            __operator = Operator;
-
             if (DataGrid == null)
                 DataGrid = Column?.DataGrid;
-
-            if (dataType == typeof(string))
-                _valueString = Value == null ? null : Value.ToString();
-            else if (isNumber)
-                _valueNumber = Value == null ? null : Convert.ToDouble(Value);
-            else if (IsEnumFlags)
-                _valueEnumFlags = Value == null ? null : (Enum)Value;
-            else if (isEnum)
-                _valueEnum = Value == null ? null : (Enum)Value;
-            else if (dataType == typeof(bool))
-                _valueBool = Value == null ? null : Convert.ToBoolean(Value);
-            else if (dataType == typeof(DateTime) || dataType == typeof(DateTime?))
-            {
-                var dateTime = Convert.ToDateTime(Value);
-                _valueDate = Value == null ? null : dateTime;
-                _valueTime = Value == null ? null : dateTime.TimeOfDay;
-            }
         }
 
-        internal async Task FieldChangedAsync(string field)
-        {
-            Field = field;
-            var operators = FilterOperator.GetOperatorByDataType(dataType);
-            Operator = operators.FirstOrDefault();
-            Value = null;
-            await OperatorChanged.InvokeAsync(Operator);
-            await ValueChanged.InvokeAsync(Value);
-            await FieldChanged.InvokeAsync(Field);
-        }
 
         internal void TitleChangedAsync(string field)
         {
@@ -141,21 +98,21 @@ namespace MudBlazor
 
         internal void StringValueChanged(string value)
         {
-            _valueString = value;
+            Value = value;
             ValueChanged.InvokeAsync(value);
             DataGrid.GroupItems();
         }
 
         internal void NumberValueChanged(double? value)
         {
-            _valueNumber = value;
+            Value = value;
             ValueChanged.InvokeAsync(value);
             DataGrid.GroupItems();
         }
 
         internal void EnumValueChanged(Enum value)
         {
-            _valueEnum = value;
+            Value = value;
             ValueChanged.InvokeAsync(value);
             DataGrid.GroupItems();
         }
@@ -164,27 +121,27 @@ namespace MudBlazor
         {
             var count = values.Count();
             if (count == 0)
-                _valueEnumFlags = null;
+                Value = null;
             else
             {
-                _valueEnumFlags = values.First();
+                Value = values.First();
                 for (int i = 1; i < count; i++)
-                    _valueEnumFlags = _valueEnumFlags.Or(values.ElementAt(i));
+                    Value = _valueEnumFlags.Or(values.ElementAt(i));
             }
-            ValueChanged.InvokeAsync(_valueEnumFlags);
+            ValueChanged.InvokeAsync(Value);
             DataGrid.GroupItems();
         }
 
         internal void BoolValueChanged(bool? value)
         {
-            _valueBool = value;
+            Value = value;
             ValueChanged.InvokeAsync(value);
             DataGrid.GroupItems();
         }
 
         internal void DateValueChanged(DateTime? value)
         {
-            _valueDate = value;
+            Value = value;
 
             if (value != null)
             {
@@ -206,7 +163,7 @@ namespace MudBlazor
 
         internal void TimeValueChanged(TimeSpan? value)
         {
-            _valueTime = value;
+            Value = value;
 
             if (_valueDate != null)
             {

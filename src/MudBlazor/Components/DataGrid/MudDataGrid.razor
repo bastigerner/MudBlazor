@@ -57,8 +57,8 @@
                                     <MudGrid Spacing="0">
                                         @foreach (var f in FilterDefinitions)
                                         {
-                                            <Filter T="T" @bind-Field="f.Field" FieldType="@f.FieldType" @bind-Title="f.Title" @bind-Operator="f.Operator" @bind-Value="f.Value"
-                                                Id="@f.Id"></Filter>
+                                            <Filter T="T"  Field="@f.Field" FieldChanged=@(field => FieldChanged(f, field)) FieldType="@f.FieldType" Title="@f.Title" Operator="@f.Operator" OperatorChanged=@(op => OperatorChanged(f, op)) Value="@f.Value" ValueChanged=@(val => ValueChanged(f, val))
+                                                Id="@f.Id" />
                                         }
                                     </MudGrid>
                                     <MudButton Class="mt-2" StartIcon="@Icons.Material.Filled.Add" OnClick="@AddFilter" Color="@Color.Primary">Add Filter</MudButton>

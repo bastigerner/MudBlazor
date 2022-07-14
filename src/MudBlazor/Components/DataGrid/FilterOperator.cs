@@ -98,7 +98,7 @@ namespace MudBlazor
             {
                 return Boolean.Values;
             }
-            if (type == typeof(System.DateTime))
+            if (type == typeof(System.DateTime) || type == typeof(System.DateTime?))
             {
                 return DateTime.Values;
             }

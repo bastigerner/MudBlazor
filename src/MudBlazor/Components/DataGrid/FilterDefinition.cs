@@ -226,9 +226,12 @@ namespace MudBlazor
             var valueEnumFalgsConstant = Expression.Convert(Expression.Constant(valueEnumFlags), typeof(Enum));
             var overload = typeof(List<Enum>).GetMethod("Contains", new[] { typeof(Enum) });
             List<Enum> selectedValues = new List<Enum>();
-            foreach (Enum item in Enum.GetValues(dataType))
-                if (valueEnumFlags.HasFlag(item) && Convert.ToUInt64(item) != 0)
-                    selectedValues.Add(item);
+            if (valueEnumFlags != null)
+            {
+                foreach (Enum item in Enum.GetValues(dataType))
+                    if (valueEnumFlags.HasFlag(item) && Convert.ToUInt64(item) != 0)
+                        selectedValues.Add(item);
+            }
 
             return Operator switch
             {
