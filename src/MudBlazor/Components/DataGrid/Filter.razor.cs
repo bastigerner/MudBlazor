@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Numerics;
-using System.Reflection;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
 
@@ -18,9 +18,13 @@ namespace MudBlazor
 
         [Parameter] public Guid Id { get; set; }
         [Parameter] public string Field { get; set; }
+        [Parameter] public Type FieldType { get; set; }
+        [Parameter] public string Title { get; set; }
         [Parameter] public string Operator { get; set; }
         [Parameter] public object Value { get; set; }
+        [Parameter] public Column<T> Column { get; set; }
         [Parameter] public EventCallback<string> FieldChanged { get; set; }
+        [Parameter] public EventCallback<string> TitleChanged { get; set; }
         [Parameter] public EventCallback<string> OperatorChanged { get; set; }
         [Parameter] public EventCallback<object> ValueChanged { get; set; }
 
@@ -38,26 +42,6 @@ namespace MudBlazor
                 OperatorChanged.InvokeAsync(Operator);
             }
         }
-        private string __field;
-        private string _field
-        {
-            get
-            {
-                return __field;
-            }
-            set
-            {
-                __field = value;
-                var operators = FilterOperator.GetOperatorByDataType(dataType);
-                Operator = operators.FirstOrDefault();
-                __operator = Operator;
-                Value = null;
-                OperatorChanged.InvokeAsync(Operator);
-                ValueChanged.InvokeAsync(Value);
-                FieldChanged.InvokeAsync(__field);
-                StateHasChanged();
-            }
-        }
         private string _valueString;
         private double? _valueNumber;
         private Enum _valueEnum = null;
@@ -72,9 +56,19 @@ namespace MudBlazor
         {
             get
             {
-                if (__field == null) return typeof(object);
+                if (Column != null)
+                    return Column.dataType;
 
-                var t = typeof(T).GetProperty(__field).PropertyType;
+                if (FieldType != null)
+                    return FieldType;
+
+                if (Field == null)
+                    return typeof(object);
+
+                if (typeof(T) == typeof(IDictionary<string, object>) && FieldType == null)
+                    throw new ArgumentNullException(nameof(FieldType));
+
+                var t = typeof(T).GetProperty(Field).PropertyType;
                 return Nullable.GetUnderlyingType(t) ?? t;
             }
         }
@@ -86,7 +80,6 @@ namespace MudBlazor
                 return FilterOperator.IsNumber(dataType);
             }
         }
-
         private bool isEnum
         {
             get
@@ -107,19 +100,10 @@ namespace MudBlazor
 
         protected override void OnInitialized()
         {
-            loadFilterUI();
-        }
-
-        protected override void OnParametersSet()
-        {
-            if (Field != null && __field != Field)
-                loadFilterUI();
-        }
-
-        private void loadFilterUI()
-        {
             __operator = Operator;
-            __field = Field;
+
+            if (DataGrid == null)
+                DataGrid = Column?.DataGrid;
 
             if (dataType == typeof(string))
                 _valueString = Value == null ? null : Value.ToString();
@@ -137,6 +121,11 @@ namespace MudBlazor
                 _valueDate = Value == null ? null : dateTime;
                 _valueTime = Value == null ? null : dateTime.TimeOfDay;
             }
+        }
+
+        internal void TitleChangedAsync(string field)
+        {
+            Field = field;
         }
 
         internal void StringValueChanged(string value)
