@@ -35,6 +35,21 @@
             <MudNumericField T="double?" Value="@_valueNumber" ValueChanged="@NumberValueChanged" FullWidth="true" Label="Value" Placeholder="Filter value" Margin="@Margin.Dense" 
             Immediate="true" Class="filter-input" />
         }
+        else if (IsEnumFlags)
+        {
+            <MudSelect T="Enum" Value="@_valueEnumFlags" SelectedValuesChanged="@EnumFlagsValueChanged" FullWidth="true" Dense="true" Margin="@Margin.Dense" MultiSelection=true>
+                @if (dataType != null && dataType.IsEnum)
+                {
+                    foreach (var item in Enum.GetValues(dataType))
+                    {
+                        if (Convert.ToUInt64(item) != 0)
+                        {
+                            <MudSelectItem T="Enum" Value="@((Enum)item)">@item</MudSelectItem>
+                        }
+                    }
+                }
+            </MudSelect>
+        }
         else if (isEnum)
         {
             <MudSelect T="Enum" Value="@_valueEnum" ValueChanged="@EnumValueChanged" FullWidth="true" Dense="true" Margin="@Margin.Dense"
@@ -89,6 +104,21 @@ else
         {
             <MudNumericField T="double?" Value="@_valueNumber" ValueChanged="@NumberValueChanged" FullWidth="true" Placeholder="Filter value" Margin="@Margin.Dense" 
             Immediate="true" Class="filter-input" />
+        }
+        else if (IsEnumFlags)
+        {
+            <MudSelect T="Enum" Value="@_valueEnumFlags" SelectedValuesChanged="@EnumFlagsValueChanged" FullWidth="true" Dense="true" Margin="@Margin.Dense" MultiSelection=true>
+                @if (dataType != null && dataType.IsEnum)
+                {
+                    foreach (var item in Enum.GetValues(dataType))
+                    {
+                        if (Convert.ToUInt64(item) != 0)
+                        {
+                            <MudSelectItem T="Enum" Value="@((Enum)item)">@item</MudSelectItem>
+                        }
+                    }
+                }
+            </MudSelect>
         }
         else if (isEnum)
         {

@@ -56,6 +56,7 @@ namespace MudBlazor
                 return FilterOperator.IsEnum(dataType);
             }
         }
+
         private bool IsEnumFlags
         {
             get
@@ -63,6 +64,7 @@ namespace MudBlazor
                 return FilterOperator.IsEnumFlags(dataType);
             }
         }
+
         private bool isDateTime
         {
             get
@@ -79,20 +81,7 @@ namespace MudBlazor
             }
         }
 
-        [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "<Pending>")]
-        static IEnumerable<MethodInfo> GetExtensionMethods(Assembly assembly, Type extendedType)
-        {
-            var query = from type in assembly.GetTypes()
-                        where type.IsSealed && !type.IsGenericType && !type.IsNested
-                        from method in type.GetMethods(BindingFlags.Static
-                            | BindingFlags.Public | BindingFlags.NonPublic)
-                        where method.IsDefined(typeof(ExtensionAttribute), false)
-                        where method.GetParameters()[0].ParameterType == extendedType
-                        select method;
-            return query;
-        }
-
-        internal Func<T, bool> GenerateFilterFunction()
+        public Func<T, bool> GenerateFilterFunction()
         {
             if (FilterFunction != null)
                 return FilterFunction;
@@ -143,6 +132,10 @@ namespace MudBlazor
             else if (isNumber)
             {
                 expression = GenerateFilterExpressionForNumericTypes(parameter);
+            }
+            else if (IsEnumFlags)
+            {
+                expression = GenerateFilterExpressionForEnumFlagsTypes(parameter);
             }
             else if (isEnum)
             {
@@ -217,6 +210,37 @@ namespace MudBlazor
             {
                 FilterOperator.Enum.Is when Value != null => Expression.AndAlso(isnotnull,
                     Expression.Equal(notNullBool, Expression.Constant(valueBool))),
+
+                _ => Expression.Constant(true, typeof(bool))
+            };
+        }
+
+        private Expression GenerateFilterExpressionForEnumFlagsTypes(ParameterExpression parameter)
+        {
+            var field = Expression.Convert(Expression.Property(parameter, typeof(T).GetProperty(Field)), typeof(Enum));
+            var valueEnumFlags = Value == null ? null : (Enum)Value;
+            var _null = Expression.Convert(Expression.Constant(null), typeof(Enum));
+            var isnull = Expression.Equal(field, _null);
+            var isnotnull = Expression.NotEqual(field, _null);
+            var method = typeof(Enum).GetMethod("HasFlag");
+            var valueEnumFalgsConstant = Expression.Convert(Expression.Constant(valueEnumFlags), typeof(Enum));
+            var overload = typeof(List<Enum>).GetMethod("Contains", new[] { typeof(Enum) });
+            List<Enum> selectedValues = new List<Enum>();
+            foreach (Enum item in Enum.GetValues(dataType))
+                if (valueEnumFlags.HasFlag(item) && Convert.ToUInt64(item) != 0)
+                    selectedValues.Add(item);
+
+            return Operator switch
+            {
+                FilterOperator.EnumFlags.Contains when Value != null =>
+                    IsNullableEnum(dataType) ? Expression.AndAlso(isnotnull,
+                            Expression.Call(field, method, valueEnumFalgsConstant))
+                        : Expression.Call(field, method, valueEnumFalgsConstant),
+
+                FilterOperator.EnumFlags.Is when Value != null =>
+                    IsNullableEnum(dataType) ? Expression.OrElse(isnull,
+                            Expression.Call(Expression.Constant(selectedValues), overload, field))
+                        : Expression.Call(Expression.Constant(selectedValues), overload, field),
 
                 _ => Expression.Constant(true, typeof(bool))
             };
@@ -301,30 +325,27 @@ namespace MudBlazor
             {
                 FilterOperator.String.Contains when Value != null =>
                     Expression.AndAlso(isnotnull,
-                        Expression.Call(field, dataType.GetMethod("Contains", new[] { dataType }), Expression.Constant(valueString))),
+                        Expression.Call(field, dataType.GetMethod("Contains", new[] { dataType, typeof(StringComparison) }), Expression.Constant(valueString), Expression.Constant(StringComparison.CurrentCultureIgnoreCase))),
 
                 FilterOperator.String.NotContains when Value != null =>
                     Expression.AndAlso(isnotnull,
-                        Expression.Not(Expression.Call(field, dataType.GetMethod("Contains", new[] { dataType }), Expression.Constant(valueString)))),
+                        Expression.Not(Expression.Call(field, dataType.GetMethod("Contains", new[] { dataType, typeof(StringComparison) }), Expression.Constant(valueString), Expression.Constant(StringComparison.CurrentCultureIgnoreCase)))),
 
-                        comparison = Expression.AndAlso(isnotnull,
-                            Expression.Equal(field, Expression.Constant(valueString)));
-                        break;
-                    case FilterOperator.String.StartsWith:
-                        if (Value == null)
-                            return alwaysTrue;
+                FilterOperator.String.Equal when Value != null =>
+                    Expression.AndAlso(isnotnull,
+                        Expression.Call(field, dataType.GetMethod("Equals", new[] { dataType, typeof(StringComparison) }), Expression.Constant(valueString), Expression.Constant(StringComparison.CurrentCultureIgnoreCase))),
 
                 FilterOperator.String.NotEqual when Value != null =>
                     Expression.AndAlso(isnotnull,
-                    Expression.Not(Expression.Equal(field, Expression.Constant(valueString)))),
+                    Expression.Not(Expression.Call(field, dataType.GetMethod("Equals", new[] { dataType, typeof(StringComparison) }), Expression.Constant(valueString), Expression.Constant(StringComparison.CurrentCultureIgnoreCase)))),
 
                 FilterOperator.String.StartsWith when Value != null =>
                     Expression.AndAlso(isnotnull,
-                        Expression.Call(field, dataType.GetMethod("StartsWith", new[] { dataType }), Expression.Constant(valueString))),
+                        Expression.Call(field, dataType.GetMethod("StartsWith", new[] { dataType, typeof(StringComparison) }), Expression.Constant(valueString), Expression.Constant(StringComparison.CurrentCultureIgnoreCase))),
 
                 FilterOperator.String.EndsWith when Value != null =>
                     Expression.AndAlso(isnotnull,
-                        Expression.Call(field, dataType.GetMethod("EndsWith", new[] { dataType }), Expression.Constant(valueString))),
+                        Expression.Call(field, dataType.GetMethod("EndsWith", new[] { dataType, typeof(StringComparison) }), Expression.Constant(valueString), Expression.Constant(StringComparison.CurrentCultureIgnoreCase))),
 
                 FilterOperator.String.Empty =>
                     Expression.OrElse(isnull,
@@ -350,14 +371,14 @@ namespace MudBlazor
                 {
                     string v = GetStringFromObject(((IDictionary<string, object>)x)[Field]);
 
-                    return v != null && v.Contains(valueString);
+                    return v != null && v.Contains(valueString, StringComparison.CurrentCultureIgnoreCase);
                 }
                 ,
                 FilterOperator.String.NotContains when Value != null => x =>
                 {
                     string v = GetStringFromObject(((IDictionary<string, object>)x)[Field]);
 
-                    return v != null && !v.Contains(valueString);
+                    return v != null && !v.Contains(valueString, StringComparison.CurrentCultureIgnoreCase);
                 }
                 ,
 
@@ -381,7 +402,7 @@ namespace MudBlazor
                 {
                     string v = GetStringFromObject(((IDictionary<string, object>)x)[Field]);
 
-                    return v != null && v.StartsWith(valueString);
+                    return v != null && v.StartsWith(valueString, StringComparison.CurrentCultureIgnoreCase);
                 }
                 ,
 
@@ -389,7 +410,7 @@ namespace MudBlazor
                 {
                     string v = GetStringFromObject(((IDictionary<string, object>)x)[Field]);
 
-                    return v != null && v.EndsWith(valueString);
+                    return v != null && v.EndsWith(valueString, StringComparison.CurrentCultureIgnoreCase);
                 }
                 ,
 

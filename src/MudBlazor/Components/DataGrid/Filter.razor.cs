@@ -123,6 +123,17 @@ namespace MudBlazor
             }
         }
 
+        internal async Task FieldChangedAsync(string field)
+        {
+            Field = field;
+            var operators = FilterOperator.GetOperatorByDataType(dataType);
+            Operator = operators.FirstOrDefault();
+            Value = null;
+            await OperatorChanged.InvokeAsync(Operator);
+            await ValueChanged.InvokeAsync(Value);
+            await FieldChanged.InvokeAsync(Field);
+        }
+
         internal void TitleChangedAsync(string field)
         {
             Field = field;
