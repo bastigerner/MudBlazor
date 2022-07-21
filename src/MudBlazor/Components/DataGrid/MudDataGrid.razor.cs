@@ -732,7 +732,7 @@ namespace MudBlazor
         /// </summary>
         internal void AddFilter()
         {
-            var column = RenderedColumns.FirstOrDefault();
+            var column = RenderedColumns.FirstOrDefault(x => x.Filterable == null);
             FilterDefinitions.Add(new FilterDefinition<T>
             {
                 Id = Guid.NewGuid(),
@@ -756,7 +756,7 @@ namespace MudBlazor
 
         internal void AddFilter(Guid id, string field)
         {
-            var column = RenderedColumns.FirstOrDefault(x => x.Field == field);
+            var column = RenderedColumns.FirstOrDefault(x => x.Field == field && x.Filterable == null);
             FilterDefinitions.Add(new FilterDefinition<T>
             {
                 Id = id,

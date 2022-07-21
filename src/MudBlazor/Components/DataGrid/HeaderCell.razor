@@ -19,7 +19,7 @@ else if (Column != null && !Column.Hidden)
                     {
                         @Column.HeaderTemplate(Column.headerContext)
                     }
-                    else 
+                    else if (!string.IsNullOrEmpty(Column.Title))
                     {
                         @computedTitle
                     }
@@ -31,7 +31,7 @@ else if (Column != null && !Column.Hidden)
                 {
                     @Column.HeaderTemplate(Column.headerContext)
                 }
-                else 
+                else if (!string.IsNullOrEmpty(Column.Title))
                 {
                     @computedTitle
                 }
@@ -100,7 +100,7 @@ else if (Column != null && !Column.Hidden)
 
         @if (filterable && DataGrid.FilterMode == DataGridFilterMode.ColumnFilterMenu)
         {
-            <MudOverlay Visible="@_filtersMenuVisible" OnClick="@(() => _filtersMenuVisible = false)" />
+            @*<MudOverlay Visible="@_filtersMenuVisible" OnClick="@(() => _filtersMenuVisible = false)" LockScroll=false/>*@
             <MudPopover Open="@_filtersMenuVisible" AnchorOrigin="@Origin.BottomRight" TransformOrigin="@Origin.TopRight" Class="pa-4 column-filter-popup">
                 @if (Column.FilterTemplate != null)
                 {
@@ -118,6 +118,7 @@ else if (Column != null && !Column.Hidden)
                         </MudItem>
                     </MudGrid>
                 }
+                <MudIconButton Icon="@Icons.Filled.Close" OnClick="@(() => _filtersMenuVisible = false)" Style="position: absolute; right: 0;" />
             </MudPopover>
         }
     </th>
