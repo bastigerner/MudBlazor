@@ -21,6 +21,20 @@ namespace MudBlazor
         public string Style { get; set; }
 
         /// <summary>
+        /// User styles, applied on top of the component's own classes and styles.
+        /// </summary>
+        [Parameter]
+        [Category(CategoryTypes.ComponentBase.Common)]
+        public string ClassLabel { get; set; }
+
+        /// <summary>
+        /// User styles, applied on top of the component's own classes and styles.
+        /// </summary>
+        [Parameter]
+        [Category(CategoryTypes.ComponentBase.Common)]
+        public string TitleLabel { get; set; }
+
+        /// <summary>
         /// Use Tag to attach any user data object to the component for your convenience.
         /// </summary>
         [Parameter]
