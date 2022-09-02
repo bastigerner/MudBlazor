@@ -51,7 +51,7 @@
                         @if (_filtersMenuVisible && FilterMode == DataGridFilterMode.Simple)
                         {
                             @*<MudOverlay LockScroll=false Visible="true" OnClick="@(() => _filtersMenuVisible = false)"></MudOverlay>*@
-                            <MudPaper Class="pa-2 filters-panel" Style="position:absolute;width:auto;min-width:700px;z-index:var(--mud-zindex-drawer)" Elevation="4">
+                            <MudPaper Class="pa-2 filters-panel" Style="position:absolute;width:700px;max-height:200px;overflow:auto;z-index:var(--mud-zindex-drawer)" Elevation="4">
                                 @if (FilterTemplate == null)
                                 { 
                                     <MudGrid Spacing="0">
@@ -274,28 +274,28 @@
     internal RenderFragment ToolbarMenu(MudDataGrid<T> __this)
     {
         return
-        @<text>
-        <MudMenu Icon="@Icons.Material.Outlined.Settings" Size="Size.Small" AnchorOrigin="Origin.BottomCenter" Dense="true">
-            <MudMenuItem OnClick="@__this.ShowColumnsPanel">Columns</MudMenuItem>
-            @if (__this.Groupable)
+    @<text>
+            <MudMenu Icon="@Icons.Material.Outlined.Settings" Size="Size.Small" AnchorOrigin="Origin.BottomCenter" Dense="true">
+                <MudMenuItem OnClick="@__this.ShowColumnsPanel">Columns</MudMenuItem>
+                @if (__this.Groupable)
             {
-                <MudMenuItem OnClick="@__this.ExpandAllGroups">Expand All Groups</MudMenuItem>
-                <MudMenuItem OnClick="@__this.CollapseAllGroups">Collapse All Groups</MudMenuItem>
+                    <MudMenuItem OnClick="@__this.ExpandAllGroups">Expand All Groups</MudMenuItem>
+                    <MudMenuItem OnClick="@__this.CollapseAllGroups">Collapse All Groups</MudMenuItem>
             }
-            @if(__this.ServerData != null)
+                @if(__this.ServerData != null)
             {
-                <MudMenuItem OnClick="@__this.InvokeServerLoadFunc">Refresh Data</MudMenuItem>
+                    <MudMenuItem OnClick="@__this.InvokeServerLoadFunc">Refresh Data</MudMenuItem>
             }
-            <MudMenuItem OnClick="@__this.OpenFilters">Filters</MudMenuItem>
-        </MudMenu>
-        </text>;
+                <MudMenuItem OnClick="@__this.OpenFilters">Filters</MudMenuItem>
+            </MudMenu>
+    </text>;
     }
 
     internal RenderFragment FooterCells(IEnumerable<T> currentItems)
     {
         return
-        @<text>
-        @if (currentItems != null)
+    @<text>
+            @if (currentItems != null)
         {
             foreach (var column in RenderedColumns)
             {
@@ -303,39 +303,39 @@
                 {
                     if (column.AggregateDefinition != null || column.FooterTemplate != null || hasFooter)
                     {
-                        <FooterCell T="T" Column="@column"></FooterCell>
+                            <FooterCell T="T" Column="@column"></FooterCell>
                     }
                 }
             }
         }
-        </text>;
+    </text>;
     }
 
     internal RenderFragment Cell(Column<T> column, T item)
     {
         return
-        @<text>
-        @{
+    @<text>
+            @{
             var cell = new Cell<T>(this, column, item);
-        }
-        <td data-label="@column.computedTitle" class="@cell.computedClass" style="@cell.computedStyle">
-            @if (column.IsEditable && !ReadOnly && DataGridEditMode.Cell == EditMode)
+            }
+            <td data-label="@column.computedTitle" class="@cell.computedClass" style="@cell.computedStyle">
+                @if (column.IsEditable && !ReadOnly && DataGridEditMode.Cell == EditMode)
             {
                 if (column.EditTemplate != null)
                 {
-                    @column.EditTemplate(cell.cellContext)
+                        @column.EditTemplate(cell.cellContext)
                 }
                 else
                 {
                     if (column.dataType == typeof(string))
                     {
-                        <MudTextField T="string" Value="@cell.valueString" ValueChanged="@cell.StringValueChangedAsync" Margin="@Margin.Dense" Style="margin-top:0"
-                            Required="true" Variant="@Variant.Text" />
+                            <MudTextField T="string" Value="@cell.valueString" ValueChanged="@cell.StringValueChangedAsync" Margin="@Margin.Dense" Style="margin-top:0"
+                                Required="true" Variant="@Variant.Text" />
                     }
                     else if (column.isNumber)
                     {
-                        <MudNumericField T="double?" Value="@cell.valueNumber" ValueChanged="@cell.NumberValueChangedAsync" Margin="@Margin.Dense" Style="margin-top:0"
-                            Required="true" Variant="@Variant.Text" />
+                            <MudNumericField T="double?" Value="@cell.valueNumber" ValueChanged="@cell.NumberValueChangedAsync" Margin="@Margin.Dense" Style="margin-top:0"
+                                Required="true" Variant="@Variant.Text" />
                     }
                 }
             }
@@ -343,14 +343,14 @@
             {
                 if (column.CellTemplate != null)
                 {
-                    @column.CellTemplate(cell.cellContext)
+                        @column.CellTemplate(cell.cellContext)
                 }
                 else
                 {
-                    @cell.ComputedValue
+                        @cell.ComputedValue
                 }
             }
-        </td>
-        </text>;
+            </td>
+    </text>;
     }
 }
