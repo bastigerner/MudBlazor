@@ -162,6 +162,13 @@ namespace MudBlazor
         public string TitleDateFormat { get; set; } = "ddd, dd MMM";
 
         /// <summary>
+        /// If AutoClose is set to true and PickerActions are defined, selecting a day will close the MudDatePicker.
+        /// </summary>
+        [Parameter]
+        [Category(CategoryTypes.FormComponent.PickerBehavior)]
+        public bool AutoClose { get; set; }
+
+        /// <summary>
         /// Function to determine whether a date is disabled
         /// </summary>
         [Parameter]
@@ -442,9 +449,12 @@ namespace MudBlazor
 
         private void OnYearClick()
         {
-            CurrentView = OpenTo.Year;
-            StateHasChanged();
-            _scrollToYearAfterRender = true;
+            if (!FixYear.HasValue)
+            {
+                CurrentView = OpenTo.Year;
+                StateHasChanged();
+                _scrollToYearAfterRender = true;
+            }
         }
 
         /// <summary>
@@ -552,6 +562,8 @@ namespace MudBlazor
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
+            await base.OnAfterRenderAsync(firstRender);
+
             if (firstRender)
             {
                 _picker_month ??= GetCalendarStartOfMonth();
@@ -565,7 +577,6 @@ namespace MudBlazor
 
             if (_scrollToYearAfterRender)
                 ScrollToYear();
-            await base.OnAfterRenderAsync(firstRender);
         }
 
         protected abstract DateTime GetCalendarStartOfMonth();
