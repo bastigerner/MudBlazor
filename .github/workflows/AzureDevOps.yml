@@ -1,0 +1,55 @@
+name: "Publish package to AzureDevOps"
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Enter version "x.x.x"
+        required: true
+  push:
+    tags:
+    - 'v*'
+
+env:
+  PROJECT_PATH: 'src/MudBlazor/MudBlazor.csproj'
+  PACKAGE_OUTPUT_DIRECTORY: ${{ github.workspace }}\output
+
+jobs:
+  deploy:
+    name: 'Deploy'
+    runs-on: 'windows-latest'
+    steps:
+    - name: 'Checkout'
+      uses: actions/checkout@v3
+
+    - name: 'Install dotnet'
+      uses: actions/setup-dotnet@v2
+      with:
+        dotnet-version: '6.0.x'
+
+    - name: 'Restore packages'
+      run: dotnet restore ${{ env.PROJECT_PATH }}
+
+    - name: 'Build project'
+      run: dotnet build ${{ env.PROJECT_PATH }} --no-restore --configuration Release
+
+    - name: 'Get Version'
+      id: version
+      uses: battila7/get-version-action@v2
+
+    - name: 'Verify Version'
+      uses: haya14busa/action-cond@v1
+      id: getVersion
+      with:
+        cond: ${{ github.event_name == 'workflow_dispatch' }}
+        if_true: ${{ github.event.inputs.version }}
+        if_false: ${{ steps.version.outputs.version-without-v }}
+        
+    - name: 'Pack project'
+      run: dotnet pack ${{ env.PROJECT_PATH }} --no-restore --no-build --configuration Release --include-symbols -p:PackageVersion=${{ steps.getVersion.outputs.value }} --output ${{ env.PACKAGE_OUTPUT_DIRECTORY }}
+
+    - name: 'Authenticate to AzureDevOps'
+      run: dotnet nuget add source ${{ secrets.AZURE_MUDBLAZOR_URL }} --name "MoveITMudBlazor" --username ${{ secrets.AZURE_MUDBLAZOR_USERNAME }} --password ${{ secrets.AZURE_MUDBLAZOR }}
+      
+    - name: 'Publish package'
+      run: dotnet nuget push ${{ env.PACKAGE_OUTPUT_DIRECTORY }}\*.nupkg --source "MoveITMudBlazor" --api-key ${{ secrets.AZURE_MUDBLAZOR_APIKEY }} --skip-duplicate
