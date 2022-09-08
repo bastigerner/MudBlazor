@@ -7,7 +7,7 @@
     {
         @if (Column.FilterTemplate != null)
         {
-            @Column.FilterTemplate(Column.filterContext) 
+            @Column.FilterTemplate(Column.filterContext)
         }
         else
         {
@@ -18,7 +18,7 @@
                 }
                 else if (isNumber && !(_operator ?? "").EndsWith("empty"))
                 {
-                    <MudNumericField T="double?" Culture="@Column.Culture" Value="@_valueNumber" ValueChanged="@NumberValueChanged" FullWidth="true" Placeholder="Filter value" Margin="@Margin.Dense" Immediate="true"></MudNumericField>
+                    <MudNumericField T="double?" Value="@_valueNumber" ValueChanged="@NumberValueChanged" FullWidth="true" Placeholder="Filter value" Margin="@Margin.Dense" Immediate="true"></MudNumericField>
                 }
                 else if (isEnumFlags)
                 {
