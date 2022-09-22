@@ -55,7 +55,7 @@ else if (Column != null && !Column.Hidden)
 
                 @if (DataGrid.FilterMode != DataGridFilterMode.ColumnFilterRow)
                 {
-                    if (hasFilter)
+                    if (hasFilter && showFilterIcon)
                     {
                         <MudIconButton Class="filter-button filtered" Icon="@Icons.Material.Filled.FilterAlt" Size="@Size.Small" OnClick="@OpenFilters"></MudIconButton>
                     }
