@@ -21,6 +21,29 @@ namespace MudBlazor.UnitTests.Components
     public class DatePickerTests : BunitTest
     {
         [Test]
+        public void Default()
+        {
+            var comp = Context.RenderComponent<MudDatePicker>();
+            var picker = comp.Instance;
+            
+            picker.Text.Should().Be(null);
+            picker.Date.Should().Be(null);
+            picker.MaxDate.Should().Be(null);
+            picker.MinDate.Should().Be(null);
+            picker.OpenTo.Should().Be(OpenTo.Date);
+            picker.FirstDayOfWeek.Should().Be(null);
+            picker.ClosingDelay.Should().Be(100);
+            picker.DisplayMonths.Should().Be(1);
+            picker.MaxMonthColumns.Should().Be(null);
+            picker.StartMonth.Should().Be(null);
+            picker.ShowWeekNumbers.Should().BeFalse();
+            picker.AutoClose.Should().BeFalse();
+            picker.FixYear.Should().Be(null);
+            picker.FixMonth.Should().Be(null);
+            picker.FixDay.Should().Be(null);
+        }
+
+        [Test]
         public void DatePickerOpenButtonAriaLabel()
         {
             var comp = Context.RenderComponent<DatePickerValidationTest>();
@@ -154,6 +177,25 @@ namespace MudBlazor.UnitTests.Components
             comp.SetParam(p => p.Date, new DateTime(2020, 10, 26));
             picker.Date.Should().Be(new DateTime(2020, 10, 26));
             picker.Text.Should().Be("26 10 2020");
+        }
+
+        [Test]        
+        public async Task DatePicker_Should_Clear()
+        {
+            var comp = Context.RenderComponent<MudDatePicker>();
+            // select elements needed for the test
+            var picker = comp.Instance;
+            picker.Text.Should().Be(null);
+            picker.Date.Should().Be(null);
+            comp.SetParam(p => p.Clearable, true);
+            comp.SetParam(p => p.Date, new DateTime(2020, 10, 26));
+            picker.Date.Should().Be(new DateTime(2020, 10, 26));
+            picker.Text.Should().Be(new DateTime(2020, 10, 26).ToShortDateString());
+
+            comp.Find("button").Click(); //clear the input
+
+            picker.Text.Should().Be(""); //ensure the text and date are reset. Note this is an empty string rather than null due to how the reset works internally
+            picker.Date.Should().Be(null);
         }
 
         [Test]
@@ -565,7 +607,22 @@ namespace MudBlazor.UnitTests.Components
                 .Should().OnlyContain(disabled => disabled == false);
         }
 
+        
         [Test]
+        public void AdditionalDateClassesFunc_ClassIsAdded()
+        {
+            Func<DateTime, string> additionalDateClassesFunc = date => "__addedtestclass__";
+            var comp = Context.RenderComponent<MudDatePicker>(
+                Parameter(nameof(MudDatePicker.AdditionalDateClassesFunc), additionalDateClassesFunc));
+
+            var daysCount = comp.FindAll("button.mud-picker-calendar-day").Select(button =>
+                ((IHtmlBaseElement)button)).Count();
+
+            comp.FindAll("button.mud-picker-calendar-day").Select(button =>
+                ((IHtmlBaseElement)button).ClassName.Contains("__addedtestclass__"))
+                .Should().HaveCount(daysCount);
+        }
+
         public async Task CheckAutoCloseDatePickerTest()
         {
             // Define a date for comparison

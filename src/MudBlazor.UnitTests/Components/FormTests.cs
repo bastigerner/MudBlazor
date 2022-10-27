@@ -1031,7 +1031,7 @@ namespace MudBlazor.UnitTests.Components
         {
             var comp = Context.RenderComponent<FormResetTest>();
             var form = comp.FindComponent<MudForm>();
-            var textFieldComp = comp.FindComponent<MudTextField<string>>();
+            var textFieldComp = comp.FindComponents<MudTextField<string>>()[1]; //the picker includes a MudTextField, so the MudTextField we want is the second in the DOM
             var textField = textFieldComp.Instance;
 
             // input some text
@@ -1083,6 +1083,39 @@ namespace MudBlazor.UnitTests.Components
         }
 
         /// <summary>
+        /// Calling form.Reset() should clear the datepicker
+        /// </summary>
+        [Test]
+        public async Task FormReset_Should_ClearDatePicker()
+        {
+            var comp = Context.RenderComponent<FormResetTest>();
+            var form = comp.FindComponent<MudForm>().Instance;
+            var datePickerComp = comp.FindComponent<MudDatePicker>();
+            var datePicker = datePickerComp.Instance;
+            // create test value and it's localized string representation
+            var testDate = new DateTime(2020, 05, 24);
+            var testDateString = testDate.ToShortDateString();  // locale independent test, will work e.g. in germany too
+
+            // input a date
+            datePickerComp.Find("input").Change(testDateString);
+            datePicker.Date.Should().Be(testDate);
+            datePicker.Text.Should().Be(testDateString);
+            // call reset directly
+            await comp.InvokeAsync(() => form.Reset());
+            datePicker.Date.Should().BeNull();
+            datePicker.Text.Should().BeNullOrEmpty();
+            
+            // input a date
+            datePickerComp.Find("input").Change(testDateString);
+            datePicker.Date.Should().Be(testDate);
+            datePicker.Text.Should().Be(testDateString);
+            // hit reset button
+            comp.Find("button.reset").Click();
+            datePicker.Date.Should().BeNull();
+            datePicker.Text.Should().BeNullOrEmpty();
+        }
+
+        /// <summary>
         /// Reset() should reset the form's state
         /// </summary>
         [Test]
@@ -1090,9 +1123,15 @@ namespace MudBlazor.UnitTests.Components
         {
             var comp = Context.RenderComponent<FormResetTest>();
             var form = comp.FindComponent<MudForm>().Instance;
-            var textFieldComp = comp.FindComponent<MudTextField<string>>();
+            var datePickerComp = comp.FindComponent<MudDatePicker>();
+            var textFieldComp = comp.FindComponents<MudTextField<string>>()[1]; //the picker includes a MudTextField, so the MudTextField we want is the second in the DOM
             var numericFieldComp = comp.FindComponent<MudNumericField<int?>>();
+            // create test value and it's localized string representation
+            var testDate = new DateTime(2022, 07, 29);
+            var testDateString = testDate.ToShortDateString();  // locale independent test, will work e.g. in germany too
 
+            form.IsValid.Should().Be(false);
+            datePickerComp.Find("input").Change(testDateString);
             form.IsValid.Should().Be(false);
             textFieldComp.Find("input").Input("Some value");
             form.IsValid.Should().Be(false);
@@ -1104,12 +1143,12 @@ namespace MudBlazor.UnitTests.Components
         }
 
         /// <summary>
-        /// Only the top standalone fields should be registered inside the form.
+        /// Only the top SubscribeToParentForm fields should be registered inside the form.
         /// </summary>
         [Test]
-        public async Task MudForm_Should_RegisterOnlyTopStandaloneFormControls()
+        public async Task MudForm_Should_RegisterOnlyTopSubscribeToParentFormFormControls()
         {
-            var comp = Context.RenderComponent<FormShouldRegisterOnlyTopStandaloneFormControlsTest>();
+            var comp = Context.RenderComponent<FormShouldRegisterOnlyTopSubscribeToParentFormFormControlsTest>();
             var form = comp.FindComponent<MudFormTestable>().Instance;
 
             Assert.AreEqual(14, form.FormControls.Count);
@@ -1190,6 +1229,28 @@ namespace MudBlazor.UnitTests.Components
             await comp.InvokeAsync(() => numeric.Increment());
             comp.Instance.FormFieldChangedEventArgs.NewValue.Should().Be(1);
             comp.Instance.FormFieldChangedEventArgs.Field.Equals(numeric);
+        }
+
+        /// <summary>
+        /// When Validation is set on a Form, it should only set validation on fields that have a For parameter
+        /// </summary>
+        [Test]
+        public async Task FormAutoValidationSetTest()
+        {
+            var comp = Context.RenderComponent<FormAutomaticValidationTest>();
+            var textComps = comp.FindComponents<MudTextField<string>>();
+            var dateComps = comp.FindComponents<MudDatePicker>();
+
+            textComps[0].Instance.For.Should().NotBeNull(); //For is set
+            textComps[1].Instance.For.Should().BeNull(); //For is not set
+            dateComps[0].Instance.For.Should().NotBeNull(); //For is set
+            dateComps[1].Instance.For.Should().BeNull(); //For is not set
+
+            //Ensure Validation is only set where For is set
+            textComps[0].Instance.Validation.Should().NotBeNull(); //Validation is set
+            textComps[1].Instance.Validation.Should().BeNull(); //Validation is not set
+            dateComps[0].Instance.Validation.Should().NotBeNull(); //Validation is set
+            dateComps[1].Instance.Validation.Should().BeNull(); //Validation is not set
         }
     }
 }

@@ -411,12 +411,24 @@ namespace MudBlazor
 
         internal event Action<ICollection<T>> SelectionChangedFromOutside;
 
+        private bool _multiSelection;
         /// <summary>
         /// If true, multiple values can be selected via checkboxes which are automatically shown in the dropdown
         /// </summary>
         [Parameter]
         [Category(CategoryTypes.FormComponent.ListBehavior)]
-        public bool MultiSelection { get; set; }
+        public bool MultiSelection
+        {
+            get => _multiSelection;
+            set
+            {
+                if (value != _multiSelection)
+                {
+                    _multiSelection = value;
+                    UpdateTextPropertyAsync(false).AndForget();
+                }
+            }
+        }
 
         /// <summary>
         /// The collection of items within this select
@@ -743,8 +755,9 @@ namespace MudBlazor
                     },
                 });
                 _keyInterceptor.KeyDown += HandleKeyDown;
-                _keyInterceptor.KeyUp += HandleKeyUp;
+                _keyInterceptor.KeyUp += HandleKeyUp;    
             }
+
             await base.OnAfterRenderAsync(firstRender);
         }
 
@@ -758,6 +771,11 @@ namespace MudBlazor
         public override ValueTask FocusAsync()
         {
             return _elementReference.FocusAsync();
+        }
+
+        public override ValueTask BlurAsync()
+        {
+            return _elementReference.BlurAsync();
         }
 
         public override ValueTask SelectAsync()
@@ -1036,7 +1054,13 @@ namespace MudBlazor
 
             if (disposing == true)
             {
-                _keyInterceptor?.Dispose();
+                if (_keyInterceptor != null)
+                {
+                    _keyInterceptor.KeyDown -= HandleKeyDown;
+                    _keyInterceptor.KeyUp -= HandleKeyUp;
+
+                    _keyInterceptor.Dispose();
+                }
             }
         }
 

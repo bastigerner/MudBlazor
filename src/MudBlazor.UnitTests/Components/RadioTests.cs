@@ -14,6 +14,24 @@ namespace MudBlazor.UnitTests.Components
     public class RadioTests : BunitTest
     {
         [Test]
+        public void RadiGroup_CheckClassTest()
+        {
+            var comp = Context.RenderComponent<RadioGroupTest1>();
+
+            var inputControl = comp.FindComponent<MudInputControl>();
+            inputControl.Instance.InputContent.Should().NotBeNull();
+
+            comp.FindAll("div.mud-radio-group").Should().ContainSingle();
+            comp.FindAll("div.some-main-class").Should().ContainSingle();
+            comp.FindAll("div.some-input-class").Should().ContainSingle();
+            comp.FindAll(".some-main-class .some-input-class").Should().ContainSingle();
+            comp.FindAll(".mud-radio").Count.Should().Be(3);
+            // Input content should not have main class (Classname), but should have input class (InputClass)
+            comp.FindAll(".mud-radio-group.some-main-class").Should().BeEmpty();
+            comp.FindAll(".mud-radio-group.some-input-class").Should().ContainSingle();
+        }
+
+        [Test]
         public void RadioGroupTest1()
         {
             var comp = Context.RenderComponent<RadioGroupTest1>();
@@ -245,7 +263,7 @@ namespace MudBlazor.UnitTests.Components
             }
             catch (Exception ex)
             {
-                ex.Message.Should().Be("Unable to set property 'IMudRadioGroup' on object of type 'MudBlazor.MudRadio`1[[System.String, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'. The error was: MudRadioGroup<Char> has a child MudRadio<System.String> with mismatching generic type.");
+                Assert.AreEqual(ex.InnerException.GetType(), typeof(MudBlazor.Utilities.Exceptions.GenericTypeMismatchException));
             }
         }
     }

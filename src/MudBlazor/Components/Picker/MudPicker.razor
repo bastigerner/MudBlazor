@@ -33,7 +33,9 @@
              Required="@Required" 
              RequiredError="@RequiredError" 
              Error="@Error" 
-             ErrorText="@ErrorText" 
+             ErrorText="@ErrorText"
+             Clearable="@(ReadOnly ? false : Clearable)"
+             OnClearButtonClick="@(() => Clear())"
              @onclick="@(() => { if (!Editable) ToggleState(); })" 
              @onkeydown="HandleKeyDown" 
              />;
@@ -45,7 +47,7 @@
         <div class="@PickerClass" id="@_elementId">
             @if (PickerVariant != PickerVariant.Static)
             {
-                <CascadingValue Name="Standalone" Value="false" IsFixed="true">
+                <CascadingValue Name="SubscribeToParentForm" Value="false" IsFixed="true">
 					@if(InputContent != null) {    
 						@InputContent
 					}
