@@ -214,3 +214,29 @@ public static class Extensions
         return (Enum)Enum.ToObject(a.GetType(), ~Convert.ToInt64(a));
     }
 }
+
+public static class Extensions
+{
+    public static Enum Or(this Enum a, Enum b)
+    {
+        // consider adding argument validation here
+        if (Enum.GetUnderlyingType(a.GetType()) != typeof(ulong))
+            return (Enum)Enum.ToObject(a.GetType(), Convert.ToInt64(a) | Convert.ToInt64(b));
+        else
+            return (Enum)Enum.ToObject(a.GetType(), Convert.ToUInt64(a) | Convert.ToUInt64(b));
+    }
+
+    public static Enum And(this Enum a, Enum b)
+    {
+        // consider adding argument validation here
+        if (Enum.GetUnderlyingType(a.GetType()) != typeof(ulong))
+            return (Enum)Enum.ToObject(a.GetType(), Convert.ToInt64(a) & Convert.ToInt64(b));
+        else
+            return (Enum)Enum.ToObject(a.GetType(), Convert.ToUInt64(a) & Convert.ToUInt64(b));
+    }
+    public static Enum Not(this Enum a)
+    {
+        // consider adding argument validation here
+        return (Enum)Enum.ToObject(a.GetType(), ~Convert.ToInt64(a));
+    }
+}

@@ -153,6 +153,7 @@ namespace MudBlazor
         }
 
         internal static bool IsEnumFlags(Type type)
+        internal static bool IsEnumFlags(Type type)
         {
             if (type.IsEnum && type.CustomAttributes.Any(x => x.AttributeType.Name.Equals("FlagsAttribute")))
                 return true;
@@ -160,18 +161,17 @@ namespace MudBlazor
             Type u = Nullable.GetUnderlyingType(type);
             return (u != null) && u.IsEnum && u.CustomAttributes.Any(x => x.AttributeType.Name.Equals("FlagsAttribute"));
         }
-
         internal static bool IsEnum(Type type)
+        internal static bool IsEnum(Type type)
+=========
+        internal static bool IsEnum([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] Type type)
+>>>>>>>>> Temporary merge branch 2
         {
             if (null == type)
                 return false;
 
             if (type.IsEnum)
                 return true;
-
-            Type u = Nullable.GetUnderlyingType(type);
-            return (u != null) && u.IsEnum;
-        }
 
         internal static bool IsArray(Type type)
         {
@@ -183,6 +183,14 @@ namespace MudBlazor
         }
 
         internal static bool IsDateTime(Type type)
+            Type u = Nullable.GetUnderlyingType(type);
+            return (u != null) && u.IsArray;
+        }
+
+        internal static bool IsDateTime(Type type)
+=========
+        internal static bool IsDateTime([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] Type type)
+>>>>>>>>> Temporary merge branch 2
         {
             if (type == typeof(System.DateTime))
                 return true;

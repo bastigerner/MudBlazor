@@ -464,8 +464,8 @@ namespace MudBlazor
 
         protected string WrapperScrollStyle =>
         new StyleBuilder()
-            .AddStyle("transform", $"translateX({ (-1 * _scrollPosition).ToString(CultureInfo.InvariantCulture)}px)", Position is Position.Top or Position.Bottom)
-            .AddStyle("transform", $"translateY({ (-1 * _scrollPosition).ToString(CultureInfo.InvariantCulture)}px)", IsVerticalTabs())
+            .AddStyle("transform", $"translateX({(-1 * _scrollPosition).ToString(CultureInfo.InvariantCulture)}px)", Position is Position.Top or Position.Bottom)
+            .AddStyle("transform", $"translateY({(-1 * _scrollPosition).ToString(CultureInfo.InvariantCulture)}px)", IsVerticalTabs())
             .Build();
 
         protected string PanelsClassnames =>
@@ -659,7 +659,7 @@ namespace MudBlazor
         {
             var x = 0D;
             var count = 0;
-            
+
             var toolbarContentSize = GetRelevantSize(_tabsContentSize);
 
             foreach (var panel in _panels)

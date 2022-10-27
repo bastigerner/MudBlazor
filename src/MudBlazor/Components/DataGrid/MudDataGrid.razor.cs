@@ -28,6 +28,7 @@ namespace MudBlazor
         private T _selectedItem;
         internal HashSet<object> _groupExpansions = new HashSet<object>();
         private List<GroupDefinition<T>> _groups = new List<GroupDefinition<T>>();
+        internal HashSet<T> _openHierarchies = new HashSet<T>();
         private PropertyInfo[] _properties = typeof(T).GetProperties();
 
         protected string _classname =>
@@ -74,6 +75,28 @@ namespace MudBlazor
 
         protected string _footClassname => new CssBuilder("mud-table-foot")
             .AddClass(FooterClass).Build();
+
+        internal SortDirection GetColumnSortDirection(string columnName)
+        {
+            if (columnName == null)
+            {
+                return SortDirection.None;
+            }
+            else
+            {
+                SortDefinition<T> sortDefinition = null;
+                var ok = SortDefinitions.TryGetValue(columnName, out sortDefinition);
+
+                if (ok)
+                {
+                    return sortDefinition.Descending ? SortDirection.Descending : SortDirection.Ascending;
+                }
+                else
+                {
+                    return SortDirection.None;
+                }
+            }
+        }
 
         protected int numPages
         {
@@ -237,6 +260,8 @@ namespace MudBlazor
 
         [Parameter] public DataGridFilterMode FilterMode { get; set; }
 
+        [Parameter] public DataGridFilterCaseSensitivity FilterCaseSensitivity { get; set; }
+
         [Parameter] public RenderFragment<List<FilterDefinition<T>>> FilterTemplate { get; set; }
 
         /// <summary>
@@ -257,6 +282,15 @@ namespace MudBlazor
         /// If true, the results are displayed in a Virtualize component, allowing a boost in rendering speed.
         /// </summary>
         [Parameter] public bool Virtualize { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value that determines how many additional items will be rendered
+        /// before and after the visible region. This help to reduce the frequency of rendering
+        /// during scrolling. However, higher values mean that more elements will be present
+        /// in the page.
+        /// Only used for virtualization.
+        /// </summary>
+        [Parameter] public int OverscanCount { get; set; } = 3;
 
         /// <summary>
         /// CSS class for the table rows. Note, many CSS settings are overridden by MudTd though
@@ -721,10 +755,26 @@ namespace MudBlazor
 
         internal void AddColumn(Column<T> column)
         {
-            if (column.Tag?.ToString() == "select-column")
+            if (column.Tag?.ToString() == "hierarchy-column")
+            {
                 RenderedColumns.Insert(0, column);
+            }
+            else if (column.Tag?.ToString() == "select-column")
+            {
+                // Position SelectColumn after HierarchyColumn if present
+                if (RenderedColumns.Select(x => x.Tag).Contains("hierarchy-column"))
+                {
+                    RenderedColumns.Insert(1, column);
+                }
+                else
+                {
+                    RenderedColumns.Insert(0, column);
+                }
+            }
             else
+            {
                 RenderedColumns.Add(column);
+            }
         }
 
         /// <summary>
@@ -854,7 +904,8 @@ namespace MudBlazor
             {
                 foreach (var property in _properties)
                 {
-                    property.SetValue(editingSourceItem, property.GetValue(_editingItem));
+                    if (property.CanWrite)
+                        property.SetValue(editingSourceItem, property.GetValue(_editingItem));
                 }
 
                 await CommittedItemChanges.InvokeAsync(editingSourceItem);
@@ -1213,6 +1264,20 @@ namespace MudBlazor
         }
 
         #endregion
+
+        internal async Task ToggleHierarchyVisibilityAsync(T item)
+        {
+            if (_openHierarchies.Contains(item))
+            {
+                _openHierarchies.Remove(item);
+            }
+            else
+            {
+                _openHierarchies.Add(item);
+            }
+
+            await InvokeAsync(StateHasChanged);
+        }
 
         #region Resize feature
 

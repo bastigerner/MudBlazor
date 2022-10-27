@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using AngleSharp.Dom;
 using Bunit;
 using FluentAssertions;
+using Microsoft.AspNetCore.Components;
 using MudBlazor.UnitTests.TestComponents;
 using NUnit.Framework;
 
@@ -709,8 +710,6 @@ namespace MudBlazor.UnitTests.Components
         public void TableMultiSelectionTest7()
         {
             var comp = Context.RenderComponent<TableMultiSelectionTest7>();
-            // print the generated html
-            //Console.WriteLine(comp.Markup);
             // select elements needed for the test
             var table = comp.FindComponent<MudTable<int>>().Instance;
             var checkboxes = comp.FindComponents<MudCheckBox<bool>>().Select(x => x.Instance).ToArray();
@@ -748,6 +747,46 @@ namespace MudBlazor.UnitTests.Components
             table.SelectedItems.Count.Should().Be(0);
             comp.Find("p").TextContent.Should().Be("SelectedItems {  }");
             checkboxes.Sum(x => x.Checked ? 1 : 0).Should().Be(0);
+        }
+
+        /// <summary>
+        /// Removing rows should not uncheck the header checkbox, which should select all items (all checkboxes on, all items in SelectedItems)
+        /// </summary>
+        [Test]
+        public void TableMultiSelectionTest8()
+        {
+            var comp = Context.RenderComponent<TableMultiSelectionTest8>();
+            // select elements needed for the test
+            var table = comp.FindComponent<MudTable<int>>().Instance;
+            var checkboxes = comp.FindComponents<MudCheckBox<bool>>().Select(x => x.Instance).ToArray();
+
+            // click header checkbox and verify selection text
+            var inputs = comp.Find("input");
+            inputs.Change(true);
+            table.SelectedItems.Count.Should().Be(5);
+            comp.Find("p").TextContent.Should().Be("SelectedItems { 0, 1, 2, 3, 4 }");
+            checkboxes.Sum(x => x.Checked ? 1 : 0).Should().Be(6);
+
+            // click delete button
+            var buttons = comp.FindAll("button");
+            buttons[2].Click(); //delete one of the elements
+
+            checkboxes = comp.FindComponents<MudCheckBox<bool>>().Select(x => x.Instance).ToArray();
+
+            //verify table markup
+            var tr = comp.FindAll("tr").ToArray();
+            tr.Length.Should().Be(5); // <-- one header, four rows
+            var td = comp.FindAll("td").ToArray();
+            td.Length.Should().Be(12); // three td per row for multi selection
+            var inputs2 = comp.FindAll("input").ToArray();
+            inputs2.Length.Should().Be(5); // one checkbox per row + one for the header
+
+            //verify selection
+            table.SelectedItems.Count.Should().Be(4);
+            comp.Find("p").TextContent.Should().Be("SelectedItems { 0, 1, 3, 4 }");
+            checkboxes.Sum(x => x.Checked ? 1 : 0).Should().Be(5);
+
+            checkboxes[0].Checked.Should().BeTrue(); //manually verify header is checked after deleting item
         }
 
         /// <summary>
@@ -1024,7 +1063,7 @@ namespace MudBlazor.UnitTests.Components
         {
             var comp = Context.RenderComponent<TableInlineEditTestApplyButtons>(
                 p => p.Add(x => x.ApplyButtonPosition, position));
-            
+
             var trs = comp.FindAll("tr");
 
             //header + 3 items + footer
@@ -1302,6 +1341,162 @@ namespace MudBlazor.UnitTests.Components
 
             // How many buttons? It should always be equal to 2
             comp.FindAll("button").Count.Should().Be(2);
+        }
+
+        /// <summary>
+        /// Ensures the table buttons render correctly
+        /// </summary>
+        [Test]
+        [TestCase(true, TableApplyButtonPosition.Start, TableEditButtonPosition.Start)]
+        [TestCase(true, TableApplyButtonPosition.StartAndEnd, TableEditButtonPosition.StartAndEnd)]
+        [TestCase(true, TableApplyButtonPosition.End, TableEditButtonPosition.End)]
+        [TestCase(false, TableApplyButtonPosition.Start, TableEditButtonPosition.Start)]
+        [TestCase(false, TableApplyButtonPosition.StartAndEnd, TableEditButtonPosition.StartAndEnd)]
+        [TestCase(false, TableApplyButtonPosition.End, TableEditButtonPosition.End)]
+        public async Task TableEditButtonRenderTest(bool customButton, TableApplyButtonPosition buttonApplyPosition, TableEditButtonPosition buttonEditPosition)
+        {
+            IRenderedComponent<ComponentBase> comp;
+            if (customButton)
+            {
+                comp = Context.RenderComponent<TableCustomEditButtonRenderTest>(parameters => parameters
+                    .Add(p => p.ApplyButtonPosition, buttonApplyPosition)
+                    .Add(p => p.EditButtonPosition, buttonEditPosition));
+            }
+            else
+            {
+                comp = Context.RenderComponent<TableEditButtonRenderTest>(parameters => parameters
+                    .Add(p => p.ApplyButtonPosition, buttonApplyPosition)
+                    .Add(p => p.EditButtonPosition, buttonEditPosition));
+            }
+
+            var trs = comp.FindAll("tr");
+
+            //header + 3 items
+            trs.Should().HaveCount(4);
+
+            var header = trs[0];
+            var expectedAmount = buttonEditPosition switch
+            {
+                TableEditButtonPosition.Start or TableEditButtonPosition.End => 2,
+                TableEditButtonPosition.StartAndEnd => 3,
+                _ => throw new NotImplementedException()
+            };
+
+            header.ChildElementCount.Should().Be(expectedAmount);
+
+            var trs2 = comp.FindAll("tr");
+            var relevantRow = trs2[2];
+            relevantRow.ChildElementCount.Should().Be(expectedAmount);
+
+            if (buttonEditPosition == TableEditButtonPosition.Start)
+            {
+                relevantRow.Children[0].FindDescendant<AngleSharp.Html.Dom.IHtmlButtonElement>().Should().NotBeNull();
+                relevantRow.Children[1].FindDescendant<AngleSharp.Html.Dom.IHtmlDivElement>().Should().NotBeNull();
+            }
+            else if (buttonEditPosition == TableEditButtonPosition.End)
+            {
+                relevantRow.Children[0].FindDescendant<AngleSharp.Html.Dom.IHtmlDivElement>().Should().NotBeNull();
+                relevantRow.Children[1].FindDescendant<AngleSharp.Html.Dom.IHtmlButtonElement>().Should().NotBeNull();
+            }
+            else if (buttonEditPosition == TableEditButtonPosition.StartAndEnd)
+            {
+                relevantRow.Children[0].FindDescendant<AngleSharp.Html.Dom.IHtmlButtonElement>().Should().NotBeNull();
+                relevantRow.Children[1].FindDescendant<AngleSharp.Html.Dom.IHtmlDivElement>().Should().NotBeNull();
+                relevantRow.Children[2].FindDescendant<AngleSharp.Html.Dom.IHtmlButtonElement>().Should().NotBeNull();
+            }
+        }
+
+        /// <summary>
+        /// Tests the trigger of the edit button
+        /// </summary>
+        [Test]
+        public async Task TableEditButtonTriggerTest()
+        {
+            var comp = Context.RenderComponent<TableEditButtonRenderTest>();
+            var trs = comp.FindAll("tr");
+            trs[1].InnerHtml.Contains("input").Should().BeFalse();
+
+            var buttons = comp.FindAll("button");
+
+            buttons[0].Click();
+            var trs2 = comp.FindAll("tr");
+            trs2[1].InnerHtml.Contains("input").Should().BeTrue();
+
+            buttons[1].Click();
+            var trs3 = comp.FindAll("tr");
+            trs3[1].InnerHtml.Contains("input").Should().BeFalse();
+            trs3[2].InnerHtml.Contains("input").Should().BeTrue();
+        }
+
+        /// <summary>
+        /// Tests the trigger of the custom edit button
+        /// </summary>
+        [Test]
+        public async Task TableCustomEditButtonTriggerTest()
+        {
+            var comp = Context.RenderComponent<TableCustomEditButtonRenderTest>();
+            var trs = comp.FindAll("tr");
+            trs[1].InnerHtml.Contains("input").Should().BeFalse();
+
+            var buttons = comp.FindAll("button");
+
+            buttons[0].Click();
+            var trs2 = comp.FindAll("tr");
+            trs2[1].InnerHtml.Contains("input").Should().BeTrue();
+
+            buttons[1].Click();
+            var trs3 = comp.FindAll("tr");
+            trs3[1].InnerHtml.Contains("input").Should().BeFalse();
+            trs3[2].InnerHtml.Contains("input").Should().BeTrue();
+        }
+
+        /// <summary>
+        /// Ensures clicking a different button does not switch the row
+        /// </summary>
+        [Test]
+        public async Task TableEditButtonRowSwitchBlockTest()
+        {
+            var comp = Context.RenderComponent<TableEditButtonRenderTest>(parameters => parameters
+                    .Add(p => p.BlockRowSwitching, true));
+            var trs = comp.FindAll("tr");
+            trs[1].InnerHtml.Contains("input").Should().BeFalse();
+
+            var buttons = comp.FindAll("button");
+
+            buttons[0].Click();
+            var trs2 = comp.FindAll("tr");
+            trs2[1].InnerHtml.Contains("input").Should().BeTrue();
+
+            buttons[1].Click();
+            var trs3 = comp.FindAll("tr");
+            trs3[1].InnerHtml.Contains("input").Should().BeTrue();
+            trs3[2].InnerHtml.Contains("input").Should().BeFalse(); //the row has not switched
+        }
+
+        /// <summary>
+        /// Clicking the edit button should not trigger the row click event
+        /// </summary>
+        [Test]
+        public async Task TableEditButtonNoRowTrigger()
+        {
+            var timesClicked = 0;
+            void OnRowClick()
+            {
+                timesClicked++;
+            }
+            var comp = Context.RenderComponent<TableEditButtonRenderTest>(parameters => parameters
+                    .Add(p => p.RowClicked, OnRowClick));
+
+            var trs = comp.FindAll("tr");
+            trs[1].Click();
+            timesClicked.Should().Be(1);
+
+            trs[2].Click();
+            timesClicked.Should().Be(2);
+
+            var buttons = comp.FindAll("button");
+            buttons[0].Click();
+            timesClicked.Should().Be(2); //clicking the button should not trigger the row click event
         }
 
         /// <summary>
@@ -1686,6 +1881,37 @@ namespace MudBlazor.UnitTests.Components
             context.Comparer.Should().Be(comp.Instance.Comparer);
             context.Selection.Comparer.Should().Be(comp.Instance.Comparer); //check comparer is set in HashSet and Dictionary
             context.Rows.Comparer.Should().Be(comp.Instance.Comparer);
+        }
+
+        /// <summary>
+        /// Using a virtualized table with multiselection must preserve checked items
+        /// </summary>
+        /// <returns></returns>
+        [Test]
+        public async Task TestVirtualizedTableWithMultiSelection()
+        {
+            var comp = Context.RenderComponent<TableMultiSelectionVirtualizedTest>();
+            var table = comp.FindComponent<MudTable<TableMultiSelectionVirtualizedTest.TestItem>>();
+            var virtualized = comp.FindComponent<Microsoft.AspNetCore.Components.Web.Virtualization.Virtualize<TableMultiSelectionVirtualizedTest.TestItem>>();
+            // find first checkbox item and check it
+            comp.FindAll(".mud-table-body .mud-table-row .mud-table-cell .mud-checkbox-input")[0].IsChecked().Should().Be(false);
+            comp.FindAll(".mud-table-body .mud-table-row .mud-table-cell")[1].TextContent.Should().Be("Value_0");
+            comp.FindAll(".mud-table-body .mud-table-row .mud-table-cell .mud-checkbox-input")[0].Change(true);
+            comp.FindAll(".mud-table-body .mud-table-row .mud-table-cell .mud-checkbox-input")[0].IsChecked().Should().Be(true);
+
+            // scroll down
+            virtualized.SetParam(
+                v => v.Items,
+                table.Instance.Items.ToList().GetRange(1000, 100));
+            comp.FindAll(".mud-table-body .mud-table-row .mud-table-cell")[1].TextContent.Should().Be("Value_1000");
+            comp.FindAll(".mud-table-body .mud-table-row .mud-table-cell .mud-checkbox-input")[0].IsChecked().Should().Be(false);
+
+            // scroll up
+            virtualized.SetParam(
+                v => v.Items,
+                table.Instance.Items.ToList().GetRange(0, 100));
+            comp.FindAll(".mud-table-body .mud-table-row .mud-table-cell")[1].TextContent.Should().Be("Value_0");
+            comp.FindAll(".mud-table-body .mud-table-row .mud-table-cell .mud-checkbox-input")[0].IsChecked().Should().Be(true);
         }
     }
 }
