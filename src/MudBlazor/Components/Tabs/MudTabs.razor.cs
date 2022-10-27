@@ -33,7 +33,7 @@ namespace MudBlazor
 
         private IResizeObserver _resizeObserver;
 
-        [CascadingParameter(Name = "RightToLeft")] public bool RightToLeft { get; set; }
+        [CascadingParameter] public bool RightToLeft { get; set; }
 
         [Inject] private IResizeObserverFactory _resizeObserverFactory { get; set; }
 
@@ -240,7 +240,21 @@ namespace MudBlazor
         /// </summary>
         [Parameter]
         [Category(CategoryTypes.Tabs.Behavior)]
+        public RenderFragment<MudTabs> HeaderStart { get; set; }
+
+        /// <summary>
+        /// A render fragment that is added before or after (based on the value of HeaderPosition) the tabs inside the header panel of the tab control
+        /// </summary>
+        [Parameter]
+        [Category(CategoryTypes.Tabs.Behavior)]
         public RenderFragment<MudTabs> Header { get; set; }
+
+        /// <summary>
+        /// A render fragment that is added before or after (based on the value of HeaderPosition) the tabs inside the header panel of the tab control
+        /// </summary>
+        [Parameter]
+        [Category(CategoryTypes.Tabs.Behavior)]
+        public RenderFragment<MudTabs> HeaderEnd { get; set; }
 
         /// <summary>
         /// Additional content specified by Header is placed either before the tabs, after or not at all
@@ -433,6 +447,8 @@ namespace MudBlazor
         protected string ToolbarClassnames =>
             new CssBuilder("mud-tabs-toolbar")
             .AddClass($"mud-tabs-rounded", !ApplyEffectsToContainer && Rounded)
+            .AddClass($"d-flex")
+            .AddClass($"flex-column", IsVerticalTabs())
             .AddClass($"mud-tabs-vertical", IsVerticalTabs())
             .AddClass($"mud-tabs-toolbar-{Color.ToDescriptionString()}", Color != Color.Default)
             .AddClass($"mud-tabs-border-{ConvertPosition(Position).ToDescriptionString()}", Border)
@@ -448,8 +464,8 @@ namespace MudBlazor
 
         protected string WrapperScrollStyle =>
         new StyleBuilder()
-            .AddStyle("transform", $"translateX({ (-1 * _scrollPosition).ToString(CultureInfo.InvariantCulture)}px)", Position is Position.Top or Position.Bottom)
-            .AddStyle("transform", $"translateY({ (-1 * _scrollPosition).ToString(CultureInfo.InvariantCulture)}px)", IsVerticalTabs())
+            .AddStyle("transform", $"translateX({(-1 * _scrollPosition).ToString(CultureInfo.InvariantCulture)}px)", Position is Position.Top or Position.Bottom)
+            .AddStyle("transform", $"translateY({(-1 * _scrollPosition).ToString(CultureInfo.InvariantCulture)}px)", IsVerticalTabs())
             .Build();
 
         protected string PanelsClassnames =>
@@ -470,6 +486,7 @@ namespace MudBlazor
         protected string MaxHeightStyles =>
             new StyleBuilder()
             .AddStyle("max-height", MaxHeight.ToPx(), MaxHeight != null)
+            .AddStyle("flex-basis: 100%")
             .Build();
 
         protected string SliderStyle => RightToLeft ?
@@ -642,7 +659,7 @@ namespace MudBlazor
         {
             var x = 0D;
             var count = 0;
-            
+
             var toolbarContentSize = GetRelevantSize(_tabsContentSize);
 
             foreach (var panel in _panels)

@@ -119,8 +119,4 @@
     <Watch Include="**/*.scss" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\MoveIt.WebServices\MoveIt.WebServices.csproj" />
-  </ItemGroup>
-
 </Project>
