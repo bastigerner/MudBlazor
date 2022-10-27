@@ -25,6 +25,18 @@ namespace MudBlazor
                 return false;
             }
         }
+        public bool IsOpen
+        {
+            get
+            {
+                if (openHierarchies != null)
+                {
+                    return openHierarchies.Contains(Item);
+                }
+
+                return false;
+            }
+        }
 
         public CellContext(MudDataGrid<T> dataGrid, T item)
         {
