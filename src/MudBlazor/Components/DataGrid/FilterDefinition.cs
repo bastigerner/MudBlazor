@@ -81,6 +81,14 @@ namespace MudBlazor
             }
         }
 
+        private bool isGuid
+        {
+            get
+            {
+                return FilterOperator.IsGuid(dataType);
+            }
+        }
+
         public Func<T, bool> GenerateFilterFunction()
         {
             if (FilterFunction != null)
@@ -108,6 +116,10 @@ namespace MudBlazor
                 else if (isDateTime)
                 {
                     return GenerateFilterForDateTimeTypeInIDictionary();
+                }
+                else if (isGuid)
+                {
+                    return GenerateFilterForGuidTypeInIDictionary();
                 }
 
                 return x => true;
@@ -149,6 +161,10 @@ namespace MudBlazor
             {
                 expression = GenerateFilterExpressionForDateTimeTypes(parameter);
             }
+            else if (isGuid)
+            {
+                expression = GenerateFilterExpressionForGuidTypes(parameter);
+            }
             else
             {
                 expression = Expression.Constant(true, typeof(bool));
@@ -161,8 +177,8 @@ namespace MudBlazor
         {
             var field = Expression.Convert(Expression.Property(parameter, typeof(T).GetProperty(Field)), typeof(DateTime?));
             DateTime? valueDateTime = Value == null ? null : (DateTime)Value;
-            var isnotnull = Expression.IsTrue(Expression.Property(field, typeof(DateTime?), "HasValue"));
-            var isnull = Expression.IsFalse(Expression.Property(field, typeof(DateTime?), "HasValue"));
+            var isnotnull = Expression.NotEqual(field, Expression.Constant(null));
+            var isnull = Expression.Equal(field, Expression.Constant(null));
             var notNullDateTime = Expression.Convert(field, typeof(DateTime));
             var valueDateTimeConstant = Expression.Constant(valueDateTime);
 
@@ -203,7 +219,7 @@ namespace MudBlazor
         {
             var field = Expression.Convert(Expression.Property(parameter, typeof(T).GetProperty(Field)), typeof(bool?));
             bool? valueBool = Value == null ? null : Convert.ToBoolean(Value);
-            var isnotnull = Expression.IsTrue(Expression.Property(field, typeof(bool?), "HasValue"));
+            var isnotnull = Expression.NotEqual(field, Expression.Constant(null));
             var notNullBool = Expression.Convert(field, typeof(bool));
 
             return Operator switch
@@ -226,12 +242,9 @@ namespace MudBlazor
             var valueEnumFalgsConstant = Expression.Convert(Expression.Constant(valueEnumFlags), typeof(Enum));
             var overload = typeof(List<Enum>).GetMethod("Contains", new[] { typeof(Enum) });
             List<Enum> selectedValues = new List<Enum>();
-            if (valueEnumFlags != null)
-            {
-                foreach (Enum item in Enum.GetValues(dataType))
-                    if (valueEnumFlags.HasFlag(item) && Convert.ToUInt64(item) != 0)
-                        selectedValues.Add(item);
-            }
+            foreach (Enum item in Enum.GetValues(dataType))
+                if (valueEnumFlags.HasFlag(item) && Convert.ToUInt64(item) != 0)
+                    selectedValues.Add(item);
 
             return Operator switch
             {
@@ -305,8 +318,8 @@ namespace MudBlazor
         {
             var field = Expression.Convert(Expression.Property(parameter, typeof(T).GetProperty(Field)), typeof(double?));
             double? valueNumber = Value == null ? null : Convert.ToDouble(Value);
-            var isnotnull = Expression.IsTrue(Expression.Property(field, typeof(double?), "HasValue"));
-            var isnull = Expression.IsFalse(Expression.Property(field, typeof(double?), "HasValue"));
+            var isnotnull = Expression.NotEqual(field, Expression.Constant(null));
+            var isnull = Expression.Equal(field, Expression.Constant(null));
             var notNullNumber = Expression.Convert(field, typeof(double));
             var valueNumberConstant = Expression.Constant(valueNumber);
 
@@ -781,6 +794,33 @@ namespace MudBlazor
             else
             {
                 return Convert.ToDateTime(o);
+            }
+        }
+
+        private Guid? GetGuidFromObject(object o)
+        {
+            if (o == null)
+                return null;
+
+            if (o.GetType() == typeof(JsonElement))
+            {
+                return ParseGuid(((JsonElement)o).GetString());
+            }
+            else
+            {
+                return ParseGuid(Convert.ToString(o));
+            }
+        }
+
+        private Guid? ParseGuid(string value)
+        {
+            if (value != null && Guid.TryParse(value, out Guid guid))
+            {
+                return guid;
+            }
+            else
+            {
+                return null;
             }
         }
     }
