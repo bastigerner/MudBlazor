@@ -337,7 +337,7 @@ namespace MudBlazor
             if (DataGrid.FilterMode == DataGridFilterMode.Simple)
                 DataGrid.OpenFilters();
             else if (DataGrid.FilterMode == DataGridFilterMode.ColumnFilterMenu)
-                _filtersMenuVisible = true;
+                _filtersMenuVisible = !_filtersMenuVisible;
         }
 
         internal void ApplyFilter()

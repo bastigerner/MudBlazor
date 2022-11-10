@@ -348,7 +348,7 @@ namespace MudBlazor
                     var field = Expression.Convert(Expression.Property(parameter, type.GetProperty(Field)), typeof(object));
                     groupBy = Expression.Lambda<Func<T, object>>(field, parameter).Compile();
                 }
-            }
+            },00
         }
 
         // Allows child components to change column grouping.

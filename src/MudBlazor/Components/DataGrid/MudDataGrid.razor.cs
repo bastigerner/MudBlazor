@@ -1129,7 +1129,7 @@ namespace MudBlazor
         /// </summary>
         public void OpenFilters()
         {
-            _filtersMenuVisible = true;
+            _filtersMenuVisible = !_filtersMenuVisible;
             StateHasChanged();
         }
 
