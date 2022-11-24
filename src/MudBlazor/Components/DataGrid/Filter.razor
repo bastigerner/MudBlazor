@@ -42,7 +42,7 @@
         }
         else if (isEnumFlags)
         {
-            <MudSelect T="Enum" Value="@_valueEnumFlags" SelectedValuesChanged="@EnumFlagsValueChanged" FullWidth="true" Dense="true" Margin="@Margin.Dense" MultiSelection=true>
+            <MudSelect T="Enum" SelectedValues="@_valueEnumFlags" SelectedValuesChanged="@EnumFlagsValueChanged" FullWidth="true" Dense="true" Margin="@Margin.Dense" MultiSelection=true>
                 @if (dataType != null && dataType.IsEnum)
                 {
                     foreach (var item in Enum.GetValues(dataType))
