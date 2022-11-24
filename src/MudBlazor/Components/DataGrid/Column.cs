@@ -276,6 +276,7 @@ namespace MudBlazor
                 var operators = FilterOperator.GetOperatorByDataType(dataType);
                 filterContext.FilterDefinition = new FilterDefinition<T>()
                 {
+                    DataGrid = this.DataGrid,
                     Field = Field,
                     FieldType = FieldType,
                     Title = Title,
