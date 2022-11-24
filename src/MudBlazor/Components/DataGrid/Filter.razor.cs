@@ -32,7 +32,7 @@ namespace MudBlazor
         private double? _valueNumber => Value == null ? null : Convert.ToDouble(Value);
         private Enum _valueEnum => (Enum)Value;
         private Enum _valueEnumFlags => (Enum)Value;
-        private IEnumerable<Enum> _valueEnumFlagsIE = new HashSet<Enum>();
+        private List<Enum> _valueEnumFlagsIE = new List<Enum>();
         private bool? _valueBool => Value == null ? null : Convert.ToBoolean(Value);
         private DateTime? _valueDate => Value == null ? DateTime.Now : Convert.ToDateTime(Value);
         private TimeSpan? _valueTime => Value == null ? DateTime.Now.TimeOfDay : Convert.ToDateTime(Value).TimeOfDay;
@@ -89,8 +89,16 @@ namespace MudBlazor
         {
             if (DataGrid == null)
                 DataGrid = Column?.DataGrid;
+            if (isEnumFlags && _valueEnumFlags != null)
+            {
+                var type = _valueEnumFlags.GetType();
+                foreach (Enum item in Enum.GetValues(type))
+                {
+                    if (_valueEnumFlags.HasFlag(item))
+                        _valueEnumFlagsIE.Add(item);
+                }
+            }
         }
-
 
         internal void TitleChangedAsync(string field)
         {
@@ -125,10 +133,11 @@ namespace MudBlazor
                 Value = null;
             else
             {
+                Value = values.First();
                 for (int i = 1; i < count; i++)
                     Value = _valueEnumFlags.Or(values.ElementAt(i));
             }
-            _valueEnumFlagsIE = values;
+            _valueEnumFlagsIE = values.ToList();
             ValueChanged.InvokeAsync(Value);
             DataGrid.GroupItems();
         }

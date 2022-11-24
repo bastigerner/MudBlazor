@@ -1,0 +1,70 @@
+﻿@page "/"
+
+<PageTitle>Index</PageTitle>
+
+<h1>Hello, world!</h1>
+
+Welcome to your new app.
+
+<SurveyPrompt Title="How is Blazor working for you?" />
+
+<MudSelect T="Enum" MultiSelection=true SelectedValues="@options" SelectedValuesChanged="Changed">
+    @foreach (Enum item in Enum.GetValues(typeof(Options)))
+    {
+        <MudSelectItem T="Enum" Value="@item">@item.ToString()</MudSelectItem>
+    }
+</MudSelect>
+
+<MudDataGrid T="TestItem" Items="@items" Filterable=true>
+    <Columns>
+        <HierarchyColumn T="TestItem" />
+        <Column T="TestItem" Field="options" Title="Options" />
+    </Columns>
+    <ChildRowContent>
+        @if (context.IsOpen)
+        {
+            <div>
+                Hello how are you
+            </div>
+        }
+    </ChildRowContent>
+</MudDataGrid>
+
+@code {
+    public List<Enum> options = new List<Enum>();
+
+    [Flags]
+    public enum Options
+    {
+        Option1 = 1,
+        Option2 = 2,
+        Option3 = 4,
+        Option4 = 8
+    }
+
+    public class TestItem
+    {
+        public Options options { get; set; }
+    }
+
+    public IEnumerable<TestItem>? items;
+
+    public void Changed(IEnumerable<Enum> op)
+    {
+        options = op.ToList();
+    }
+
+    protected override void OnInitialized()
+    {
+        items = new HashSet<TestItem>() { 
+            new TestItem() { options = Options.Option1 },
+            new TestItem() { options = Options.Option2 },
+            new TestItem() { options = Options.Option3 },
+            new TestItem() { options = Options.Option1 | Options.Option2 },
+            new TestItem() { options = Options.Option4 } };
+
+        options.Add(Options.Option1);
+        options.Add(Options.Option2);
+        options.Add(Options.Option3);
+    }
+}

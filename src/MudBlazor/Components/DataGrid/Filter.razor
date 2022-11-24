@@ -42,14 +42,14 @@
         }
         else if (isEnumFlags)
         {
-            <MudSelect T="Enum" SelectedValues="@_valueEnumFlagsIE" SelectedValuesChanged="@EnumFlagsValueChanged" FullWidth="true" Dense="true" Margin="@Margin.Dense" MultiSelection=true>
+            <MudSelect T="Enum" MultiSelection=true SelectedValues="@_valueEnumFlagsIE" SelectedValuesChanged="EnumFlagsValueChanged" FullWidth="true" Dense="true" Margin="@Margin.Dense">
                 @if (dataType != null && dataType.IsEnum)
                 {
-                    foreach (var item in Enum.GetValues(dataType))
+                    foreach (Enum item in Enum.GetValues(dataType))
                     {
                         if (Convert.ToUInt64(item) != 0)
                         {
-                            <MudSelectItem T="Enum" Value="@((Enum)item)">@item</MudSelectItem>
+                            <MudSelectItem T="Enum" Value="@item">@item</MudSelectItem>
                         }
                     }
                 }
@@ -60,9 +60,12 @@
             <MudSelect T="Enum" Value="@_valueEnum" ValueChanged="@EnumValueChanged" FullWidth="true" Dense="true" Margin="@Margin.Dense"
                 Class="filter-input">
                 <MudSelectItem T="Enum" Value="@(null)"></MudSelectItem>
-                @foreach (var item in Enum.GetValues(dataType))
+                @foreach (Enum item in Enum.GetValues(dataType))
                 {
-                    <MudSelectItem T="Enum" Value="@((Enum)item)">@item</MudSelectItem>
+                    if (item != null)
+                    {
+                        <MudSelectItem T="Enum" Value="@item">@item</MudSelectItem>
+                    }
                 }
             </MudSelect>
         }
