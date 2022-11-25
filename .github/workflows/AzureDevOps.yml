@@ -17,7 +17,7 @@ env:
 jobs:
   deploy:
     name: 'Deploy'
-    runs-on: 'windows-latest'
+    runs-on: 'ubuntu-latest'
     steps:
     - name: 'Checkout'
       uses: actions/checkout@v3
@@ -28,12 +28,12 @@ jobs:
         dotnet-version: |
           6.0.x
           7.0.x
-
-    - name: 'Restore packages'
-      run: dotnet restore ${{ env.PROJECT_PATH }}
-
+          
     - name: 'Build project'
-      run: dotnet build ${{ env.PROJECT_PATH }} --no-restore --configuration Release
+      run: |
+        dotnet restore ${{ env.PROJECT_PATH }}
+        dotnet build ${{ env.PROJECT_PATH }} --configuration Release
+        dotnet test ${{ env.PROJECT_PATH }} --configuration Release
 
     - name: 'Get Version'
       id: version
