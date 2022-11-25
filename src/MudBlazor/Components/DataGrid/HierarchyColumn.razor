@@ -2,7 +2,7 @@
 @inherits MudComponentBase
 @typeparam T
 
-<Column T="T" Tag="@("hierarchy-column")" Sortable="false" Resizable="false" ShowColumnOptions="false" HeaderStyle="width:0%" FieldType="@typeof(object)"
+<Column T="T" Tag="@("hierarchy-column")" Sortable="false" Resizable="false" ShowColumnOptions="false" HeaderStyle="@HeaderStyle" FieldType="@typeof(object)"
     Filterable="false">
     <CellTemplate>
         <label class="ma-n3">
@@ -20,4 +20,5 @@
     [Parameter] public string OpenIcon { get; set; } = Icons.Material.Filled.ExpandMore;
     [Parameter] public Size IconSize { get; set; } = Size.Medium;
     [Parameter] public Func<T, bool> ButtonDisabledFunc { get; set; } = x => false;
+    [Parameter] public string HeaderStyle { get; set; } = "width:0%";
 }

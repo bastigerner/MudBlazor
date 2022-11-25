@@ -218,9 +218,12 @@ public static class Extensions
         else
             return (Enum)Enum.ToObject(a.GetType(), Convert.ToUInt64(a) & Convert.ToUInt64(b));
     }
-    public static Enum Not(this Enum a)
+    public static Enum Not(this Enum a, Enum b)
     {
         // consider adding argument validation here
-        return (Enum)Enum.ToObject(a.GetType(), ~Convert.ToInt64(a));
+        if (Enum.GetUnderlyingType(a.GetType()) != typeof(ulong))
+            return (Enum)Enum.ToObject(a.GetType(), Convert.ToInt64(a) & ~Convert.ToInt64(b));
+        else
+            return (Enum)Enum.ToObject(a.GetType(), Convert.ToUInt64(a) & ~Convert.ToUInt64(b));
     }
 }
