@@ -82,7 +82,7 @@
                                 <MudGrid Spacing="0" Class="relative">
                                     @foreach (var column in RenderedColumns)
                                     {
-                                        if (column.Hideable)
+                                        if (!column.Hideable.HasValue || column.Hideable.Value)
                                         {
                                             <MudItem xs="12">
                                                 <MudSwitch T="bool" Checked="@column.Hidden" CheckedChanged="@column.ToggleAsync" Converter="_oppositeBoolConverter" Color="Color.Primary" Label="@(column.Title ?? @column.Field)" />
