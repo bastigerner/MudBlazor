@@ -82,9 +82,12 @@
                                 <MudGrid Spacing="0" Class="relative">
                                     @foreach (var column in RenderedColumns)
                                     {
-                                        <MudItem xs="12">
-                                            <MudSwitch T="bool" Disabled="@(!(column.Hideable ?? false))" Checked="@column.Hidden" CheckedChanged="@column.ToggleAsync" Converter="_oppositeBoolConverter" Color="Color.Primary" Label="@(column.Title ?? @column.Field)" />
-                                        </MudItem>
+                                        if (column.Hideable)
+                                        {
+                                            <MudItem xs="12">
+                                                <MudSwitch T="bool" Checked="@column.Hidden" CheckedChanged="@column.ToggleAsync" Converter="_oppositeBoolConverter" Color="Color.Primary" Label="@(column.Title ?? @column.Field)" />
+                                            </MudItem>
+                                        }
                                     }
                                     <MudItem xs="6">
                                         <MudButton OnClick="@HideAllColumnsAsync" Color="@Color.Primary">Hide All</MudButton>
